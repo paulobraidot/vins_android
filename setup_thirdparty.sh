@@ -39,17 +39,26 @@ if [ ! -d "ceres-solver-1.13.0" ]; then
     fi
 fi
 
-echo "=== Building Ceres static library for ABIs ==="
+echo "=== Ensuring NDK 21.4.7075529 is installed ==="
 NDK_VERSION="21.4.7075529"
-if [ -d "$ANDROID_SDK_ROOT/ndk/$NDK_VERSION" ]; then
-    ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/$NDK_VERSION"
-elif [ -d "/usr/local/lib/android/sdk/ndk/$NDK_VERSION" ]; then
-    ANDROID_NDK_HOME="/usr/local/lib/android/sdk/ndk/$NDK_VERSION"
+SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+if [ -z "$SDK_ROOT" ]; then
+    SDK_ROOT="/usr/local/lib/android/sdk"
+fi
+
+if [ ! -d "$SDK_ROOT/ndk/$NDK_VERSION" ]; then
+    echo "Installing NDK $NDK_VERSION via sdkmanager..."
+    yes | "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" || \
+    yes | "$SDK_ROOT/tools/bin/sdkmanager" --install "ndk;$NDK_VERSION" || true
+fi
+
+if [ -d "$SDK_ROOT/ndk/$NDK_VERSION" ]; then
+    ANDROID_NDK_HOME="$SDK_ROOT/ndk/$NDK_VERSION"
 elif [ -z "$ANDROID_NDK_HOME" ]; then
-    if [ -d "$ANDROID_SDK_ROOT/ndk-bundle" ]; then
-        ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk-bundle"
-    elif [ -d "$ANDROID_SDK_ROOT/ndk" ]; then
-        ANDROID_NDK_HOME=$(ls -d $ANDROID_SDK_ROOT/ndk/* | tail -n 1)
+    if [ -d "$SDK_ROOT/ndk-bundle" ]; then
+        ANDROID_NDK_HOME="$SDK_ROOT/ndk-bundle"
+    elif [ -d "$SDK_ROOT/ndk" ]; then
+        ANDROID_NDK_HOME=$(ls -d $SDK_ROOT/ndk/* | tail -n 1)
     fi
 fi
 
