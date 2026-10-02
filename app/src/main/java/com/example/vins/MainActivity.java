@@ -113,7 +113,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener, SensorEventListener {
 
     private static final String TAG = "MainActivity";
-    private static final boolean GET_DATA = true;       //是否用来采集校准数据
+    private static final boolean GET_DATA = false;       // Set to false for VINS tracking mode
 
     private static Rect sRect = new Rect(0, 0, 640, 480);
 
@@ -146,7 +146,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
      * Adjustment to auto-exposure (AE) target image brightness in EV
      */
     private final int aeCompensation = 0;
-//    private final int aeCompensation = -1;
 
     private Surface surface;
 
@@ -162,9 +161,6 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
     // ImageView for initialization instructions
     private ImageView ivInit;
-
-    // directory path for BRIEF config files
-    private final String directoryPathBriefFiles = "/storage/emulated/0/VINS";
 
     // Distance of virtual Cam from Center
     // could be easily manipulated in UI later
@@ -194,24 +190,21 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         // first make sure the necessary permissions are given
         checkPermissionsIfNeccessary();
 
-        mPath = Environment.getExternalStorageDirectory() + File.separator + "VINS" + File.separator + "img_imu_data";
-        File file = new File(mPath);
-        if (!file.exists()) file.mkdirs();
+        File appStorageDir = getExternalFilesDir(null);
+        if (appStorageDir != null) {
+            mPath = appStorageDir.getAbsolutePath() + File.separator + "VINS" + File.separator + "img_imu_data";
+            File file = new File(mPath);
+            if (!file.exists()) file.mkdirs();
 
-        String testPath = getExternalFilesDir(null).getAbsolutePath();
-        Log.i("vinstest: ", testPath);
+            File vinsDir = new File(appStorageDir, "VINS");
+            if (!vinsDir.exists()) vinsDir.mkdirs();
 
-        Log.i(TAG,"VinsMonoDebug2");
+            File file1 = new File(vinsDir, "brief_k10L6.bin");
+            File file2 = new File(vinsDir, "brief_pattern.yml");
 
-        File file1 = new File(Environment.getExternalStorageDirectory() + File.separator + "VINS" +
-                File.separator + "brief_k10L6.bin");
-        File file2 = new File(Environment.getExternalStorageDirectory() + File.separator + "VINS" +
-                File.separator + "brief_pattern.yml");
-
-        Log.i(TAG,"VinsMonoDebug3");
-
-        if (!file1.exists()) copyFile(file1);
-        if (!file2.exists()) copyFile(file2);
+            if (!file1.exists()) copyFile(file1);
+            if (!file2.exists()) copyFile(file2);
+        }
 
         cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
 
