@@ -40,7 +40,12 @@ if [ ! -d "ceres-solver-1.13.0" ]; then
 fi
 
 echo "=== Building Ceres static library for ABIs ==="
-if [ -z "$ANDROID_NDK_HOME" ]; then
+NDK_VERSION="21.4.7075529"
+if [ -d "$ANDROID_SDK_ROOT/ndk/$NDK_VERSION" ]; then
+    ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/$NDK_VERSION"
+elif [ -d "/usr/local/lib/android/sdk/ndk/$NDK_VERSION" ]; then
+    ANDROID_NDK_HOME="/usr/local/lib/android/sdk/ndk/$NDK_VERSION"
+elif [ -z "$ANDROID_NDK_HOME" ]; then
     if [ -d "$ANDROID_SDK_ROOT/ndk-bundle" ]; then
         ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk-bundle"
     elif [ -d "$ANDROID_SDK_ROOT/ndk" ]; then
