@@ -33,12 +33,7 @@ echo "=== Setting up Ceres Solver 1.13.0 ==="
 if [ ! -d "ceres-solver-1.13.0" ]; then
     curl -L -o ceres.tar.gz https://github.com/ceres-solver/ceres-solver/archive/refs/tags/1.13.0.tar.gz
     tar -xzf ceres.tar.gz
-    mv ceres-solver-1.13.0 ceres-src
-    mkdir -p ceres-solver-1.13.0/include ceres-solver-1.13.0/internal ceres-solver-1.13.0/config
-    cp -r ceres-src/include/* ceres-solver-1.13.0/include/
-    cp -r ceres-src/internal/* ceres-solver-1.13.0/internal/
-    cp -r ceres-src/config/* ceres-solver-1.13.0/config/
-    rm -rf ceres-src ceres.tar.gz
+    rm ceres.tar.gz
 fi
 
 echo "=== Building Ceres static library for ABIs ==="
@@ -68,7 +63,7 @@ if [ -n "$ANDROID_NDK_HOME" ]; then
             -DEIGEN_INCLUDE_DIR="$EIGEN_PATH" \
             -DBUILD_EXAMPLES=OFF \
             -DBUILD_TESTING=OFF \
-            -MINIGLOG=ON
+            -DMINIGLOG=ON
 
         cmake --build "$BUILD_DIR" --config Release --target ceres -- -j$(nproc)
 
