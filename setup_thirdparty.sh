@@ -54,45 +54,37 @@ fi
 
 if [ -d "$SDK_ROOT/ndk/$NDK_VERSION" ]; then
     ANDROID_NDK_HOME="$SDK_ROOT/ndk/$NDK_VERSION"
-elif [ -z "$ANDROID_NDK_HOME" ]; then
-    if [ -d "$SDK_ROOT/ndk-bundle" ]; then
-        ANDROID_NDK_HOME="$SDK_ROOT/ndk-bundle"
-    elif [ -d "$SDK_ROOT/ndk" ]; then
-        ANDROID_NDK_HOME=$(ls -d $SDK_ROOT/ndk/* | tail -n 1)
-    fi
+elif [ -d "/usr/local/lib/android/sdk/ndk/$NDK_VERSION" ]; then
+    ANDROID_NDK_HOME="/usr/local/lib/android/sdk/ndk/$NDK_VERSION"
 fi
 
-if [ -n "$ANDROID_NDK_HOME" ]; then
-    echo "Using NDK at: $ANDROID_NDK_HOME"
-    EIGEN_PATH="$(pwd)/eigen-3.2.10"
-    CERES_PATH="$(pwd)/ceres-solver-1.13.0"
+echo "Using NDK at: $ANDROID_NDK_HOME"
+EIGEN_PATH="$(pwd)/eigen-3.2.10"
+CERES_PATH="$(pwd)/ceres-solver-1.13.0"
 
-    for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
-        echo "Building Ceres for $ABI..."
-        BUILD_DIR="/tmp/ceres_build_$ABI"
-        rm -rf "$BUILD_DIR"
-        mkdir -p "$BUILD_DIR"
+for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
+    echo "Building Ceres for $ABI..."
+    BUILD_DIR="/tmp/ceres_build_$ABI"
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
 
-        cmake -B"$BUILD_DIR" -H"$CERES_PATH" \
-            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
-            -DANDROID_ABI="$ABI" \
-            -DANDROID_PLATFORM=android-21 \
-            -DEIGEN_INCLUDE_DIR="$EIGEN_PATH" \
-            -DCMAKE_CXX_FLAGS="-std=c++14" \
-            -DBUILD_EXAMPLES=OFF \
-            -DBUILD_TESTING=OFF \
-            -DOPENMP=OFF \
-            -DMINIGLOG=ON
+    cmake -B"$BUILD_DIR" -H"$CERES_PATH" \
+        -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+        -DANDROID_ABI="$ABI" \
+        -DANDROID_PLATFORM=android-21 \
+        -DEIGEN_INCLUDE_DIR="$EIGEN_PATH" \
+        -DCMAKE_CXX_FLAGS="-std=c++14" \
+        -DBUILD_EXAMPLES=OFF \
+        -DBUILD_TESTING=OFF \
+        -DOPENMP=OFF \
+        -DMINIGLOG=ON
 
-        cmake --build "$BUILD_DIR" --config Release --target ceres -- -j$(nproc)
+    cmake --build "$BUILD_DIR" --config Release --target ceres -- -j$(nproc)
 
-        DEST_DIR="$CERES_PATH/obj/local/$ABI"
-        mkdir -p "$DEST_DIR"
-        cp "$BUILD_DIR/lib/libceres.a" "$DEST_DIR/"
-        rm -rf "$BUILD_DIR"
-    done
-else
-    echo "Warning: ANDROID_NDK_HOME not found. Skipping Ceres compilation step."
-fi
+    DEST_DIR="$CERES_PATH/obj/local/$ABI"
+    mkdir -p "$DEST_DIR"
+    cp "$BUILD_DIR/lib/libceres.a" "$DEST_DIR/"
+    rm -rf "$BUILD_DIR"
+done
 
 echo "=== Setup completed successfully ==="
