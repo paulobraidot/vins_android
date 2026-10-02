@@ -34,6 +34,9 @@ if [ ! -d "ceres-solver-1.13.0" ]; then
     curl -L -o ceres.tar.gz https://github.com/ceres-solver/ceres-solver/archive/refs/tags/1.13.0.tar.gz
     tar -xzf ceres.tar.gz
     rm ceres.tar.gz
+    if [ -f "ceres-solver-1.13.0/internal/ceres/schur_eliminator_impl.h" ]; then
+        sed -i 's/\brandom_shuffle\b/std::random_shuffle/g' ceres-solver-1.13.0/internal/ceres/schur_eliminator_impl.h
+    fi
 fi
 
 echo "=== Building Ceres static library for ABIs ==="
@@ -61,6 +64,7 @@ if [ -n "$ANDROID_NDK_HOME" ]; then
             -DANDROID_ABI="$ABI" \
             -DANDROID_PLATFORM=android-21 \
             -DEIGEN_INCLUDE_DIR="$EIGEN_PATH" \
+            -DCMAKE_CXX_FLAGS="-std=c++14" \
             -DBUILD_EXAMPLES=OFF \
             -DBUILD_TESTING=OFF \
             -DMINIGLOG=ON
