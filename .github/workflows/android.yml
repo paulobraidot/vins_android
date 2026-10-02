@@ -22,6 +22,11 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Set up NDK 21.4.7075529
+        uses: android-actions/setup-ndk@v3
+        with:
+          ndk-version: '21.4.7075529'
+
       - name: Setup Thirdparty Dependencies (OpenCV, Boost, Eigen, Ceres)
         run: |
           chmod +x setup_thirdparty.sh
