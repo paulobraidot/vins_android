@@ -67,6 +67,7 @@ if [ -n "$ANDROID_NDK_HOME" ]; then
             -DCMAKE_CXX_FLAGS="-std=c++14" \
             -DBUILD_EXAMPLES=OFF \
             -DBUILD_TESTING=OFF \
+            -DOPENMP=OFF \
             -DMINIGLOG=ON
 
         cmake --build "$BUILD_DIR" --config Release --target ceres -- -j$(nproc)
