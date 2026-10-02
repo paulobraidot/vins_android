@@ -22,13 +22,10 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Download Thirdparty Dependencies (OpenCV SDK)
+      - name: Setup Thirdparty Dependencies (OpenCV, Boost, Eigen, Ceres)
         run: |
-          mkdir -p app/src/main/cpp/thirdparty/opencv-4.1.0-android-sdk
-          cd app/src/main/cpp/thirdparty/opencv-4.1.0-android-sdk
-          curl -L -o opencv.zip https://github.com/opencv/opencv/releases/download/4.1.0/opencv-4.1.0-android-sdk.zip
-          unzip -q opencv.zip
-          rm opencv.zip
+          chmod +x setup_thirdparty.sh
+          ./setup_thirdparty.sh
 
       - name: Make gradlew executable
         run: chmod +x gradlew
