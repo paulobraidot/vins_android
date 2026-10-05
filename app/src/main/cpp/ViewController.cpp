@@ -715,7 +715,7 @@ void ViewController::imuStartUpdate() {
     assert(looper != NULL);
 
     accelerometerEventQueue = ASensorManager_createEventQueue(sensorManager, looper,
-                                                              LOOPER_ID_USER, NULL,
+                                                              LOOPER_ID_USER, process_accel_sensor_events,
                                                               NULL);
     assert(accelerometerEventQueue != NULL);
     const ASensor *accelerometer = ASensorManager_getDefaultSensor(sensorManager,
@@ -751,6 +751,22 @@ void ViewController::imuStartUpdate() {
 bool GET_DATA = true;
 bool first = true;
 ofstream outfile;
+
+int ViewController::process_accel_sensor_events(int fd, int events, void *data) {
+    ASensorEvent acclEvent;
+    while (ASensorEventQueue_getEvents(accelerometerEventQueue, &acclEvent, 1) > 0) {
+        if (acclEvent.type == ASENSOR_TYPE_ACCELEROMETER) {
+            double acclTimestamp = timeStampToSec(acclEvent.timestamp);
+            shared_ptr<IMU_MSG> acc_msg(new IMU_MSG());
+            acc_msg->header = acclTimestamp;
+            acc_msg->acc << acclEvent.acceleration.x,
+                    acclEvent.acceleration.y,
+                    acclEvent.acceleration.z;
+            instance->cur_acc = acc_msg;
+        }
+    }
+    return 1;
+}
 
 int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
     static ASensorEvent acclEvent;
@@ -813,23 +829,19 @@ int ViewController::process_imu_sensor_events(int fd, int events, void *data) {
         }
 
         while (acclEventTimestamp < instance->gyro_buf[0].header) {
-//            LOGI("acclEventTimestamp < gyroEvent.timestamp: %lf < %lf", acclEventTimestamp , instance->gyro_buf[0].header);
-            ssize_t numEvents;
-            while ((numEvents = ASensorEventQueue_getEvents(accelerometerEventQueue, &acclEvent,
-                                                            1)) == 0) {
-//                LOGI("having to wait for accl event");
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            ssize_t numEvents = ASensorEventQueue_getEvents(accelerometerEventQueue, &acclEvent, 1);
+            if (numEvents <= 0) {
+                if (instance->cur_acc && instance->cur_acc->header > 0) {
+                    acclEventTimestamp = instance->cur_acc->header;
+                }
+                break;
             }
-            assert(numEvents == 1);
             assert(acclEvent.type == ASENSOR_TYPE_ACCELEROMETER);
 
             acclEventTimestamp = timeStampToSec(acclEvent.timestamp);
 
-//            LOGI("IMU accl event timeStamp: %lf", timeStampAccl);
             shared_ptr<IMU_MSG> acc_msg(new IMU_MSG());
             acc_msg->header = acclEventTimestamp;
-            // TODO: Apply a matrix multiplication to enable use of different coordinate systems
-            // in Android the unit is m/s^2 in iOS it is g (9.8m/s^2)
             acc_msg->acc << acclEvent.acceleration.x,
                     acclEvent.acceleration.y,
                     acclEvent.acceleration.z;

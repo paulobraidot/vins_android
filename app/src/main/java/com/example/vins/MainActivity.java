@@ -227,17 +227,22 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             inputStream.close();
             outputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.w(TAG, "Asset file not found in APK: " + file.getName());
         }
     }
+
+    private final CameraCaptureSession.CaptureCallback mCaptureCallback = new CameraCaptureSession.CaptureCallback() {
+    };
 
     /**
      * Starting separate thread to handle camera input
      */
     private void initLooper() {
-        threadHandler = new HandlerThread("Camera2Thread");
-        threadHandler.start();
-        handler = new Handler(threadHandler.getLooper());
+        if (threadHandler == null) {
+            threadHandler = new HandlerThread("Camera2Thread");
+            threadHandler.start();
+            handler = new Handler(threadHandler.getLooper());
+        }
     }
 
     /**
@@ -380,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         }
 
         // to set the format of captured images and the maximum number of images that can be accessed in mImageReader
-        imageReader = ImageReader.newInstance(imageWidth, imageHeight, ImageFormat.YUV_420_888, 1);
+        imageReader = ImageReader.newInstance(imageWidth, imageHeight, ImageFormat.YUV_420_888, 2);
 
         imageReader.setOnImageAvailableListener(onImageAvailableListener, handler);
 
@@ -445,7 +450,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 //        previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
         previewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
 
-        session.setRepeatingRequest(previewBuilder.build(), null, handler);
+        session.setRepeatingRequest(previewBuilder.build(), mCaptureCallback, handler);
     }
 
     /**
@@ -550,6 +555,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         if (null != threadHandler) {
             threadHandler.quitSafely();
             threadHandler = null;
+            handler = null;
         }
 
         mVinsJNI.onPause();
@@ -600,6 +606,12 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
             if (!hasAllPermissions) {
                 finish();
+            } else if (textureView != null && textureView.isAvailable()) {
+                try {
+                    cameraManager.openCamera(cameraID, cameraDeviceStateCallback, handler);
+                } catch (CameraAccessException | SecurityException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
