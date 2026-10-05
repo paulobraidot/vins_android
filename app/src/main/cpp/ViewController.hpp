@@ -207,6 +207,7 @@ private:
     static ASensorEventQueue *gyroscopeEventQueue;
 
     static int process_imu_sensor_events(int fd, int events, void* data);
+    static int process_accel_sensor_events(int fd, int events, void* data);
 
     // singleton for static callbacks
     static ViewController* instance;

@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             inputStream.close();
             outputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.w(TAG, "Asset file not found in APK: " + file.getName());
         }
     }
 
